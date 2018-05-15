@@ -2,7 +2,7 @@ cmake_minimum_required(VERSION 2.8.3)
 project(rsj_robot_test)
 
 ## Find catkin and any catkin packages
-find_package(catkin REQUIRED COMPONENTS roscpp std_msgs nav_msgs geometry_msgs sensor_msgs tf)
+find_package(catkin REQUIRED COMPONENTS roscpp std_msgs nav_msgs geometry_msgs sensor_msgs tf visualization_msgs)
 find_package(Boost 1.53 REQUIRED system serialization)
 
 ## Declare a catkin package
