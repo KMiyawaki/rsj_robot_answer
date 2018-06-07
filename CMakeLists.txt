@@ -7,7 +7,7 @@ find_package(Boost 1.53 REQUIRED system serialization)
 
 ## Declare a catkin package
 catkin_package(
-    DEPENDS roscpp std_msgs nav_msgs geometry_msgs sensor_msgs tf
+    DEPENDS roscpp std_msgs nav_msgs geometry_msgs sensor_msgs tf visualization_msgs
 )
 
 include(CheckCXXCompilerFlag)
