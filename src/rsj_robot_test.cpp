@@ -85,7 +85,7 @@ class RsjRobotTestNode
                     goal.header.frame_id = "base_link"; // ロボットローカル座標におけるゴール位置を指定する。
                     goal.pose.position.x = target_x_;
                     goal.pose.position.y = target_y_;
-                    goal.pose.orientation = tf::createQuaternionMsgFromYaw(0);
+                    goal.pose.orientation = tf::createQuaternionMsgFromYaw(atan2(target_y_, target_x_));
                     pub_goal_.publish(goal);
                     state_ = STATE_TRACING;
                     ROS_INFO("Start Tracing. target %3.2f, %3.2f", target_x_, target_y_);
