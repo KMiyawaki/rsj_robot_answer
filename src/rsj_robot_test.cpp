@@ -19,24 +19,10 @@ private:
 
   void cbOdom(const nav_msgs::Odometry::ConstPtr &msg)
   {
-    ROS_INFO("vel %f", msg->twist.twist.linear.x);
-    odom_ = *msg; // 追記
   }
 
   void cbScan(const sensor_msgs::LaserScan::ConstPtr &msg)
   {
-    int i = msg->ranges.size() / 2;
-    if (msg->ranges[i] < msg->range_min || // エラー値の場合
-        msg->ranges[i] > msg->range_max || // 測定範囲外の場合
-        std::isnan(msg->ranges[i]))        // 無限遠の場合
-    {
-      ROS_INFO("front-range: measurement error");
-    }
-    else
-    {
-      ROS_INFO("front-range: %0.3f",
-               msg->ranges[msg->ranges.size() / 2]);
-    }
   }
 
   void cbCluster(const visualization_msgs::MarkerArray::ConstPtr &msg)
