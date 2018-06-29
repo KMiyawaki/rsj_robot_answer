@@ -11,11 +11,13 @@ class RsjRobotTestNode
 private:
   ros::NodeHandle nh_;
   ros::Subscriber sub_odom_;
-  ros::Subscriber sub_scan_;     // <- URG用のサブスクライバを追加
-  ros::Subscriber sub_clusters_; // 追記
+  ros::Subscriber sub_scan_;
+  ros::Subscriber sub_clusters_;
 
   ros::Publisher pub_twist_;
   nav_msgs::Odometry odom_;
+
+  visualization_msgs::MarkerArray marker_array_;
 
   void cbOdom(const nav_msgs::Odometry::ConstPtr &msg)
   {
@@ -27,39 +29,7 @@ private:
 
   void cbCluster(const visualization_msgs::MarkerArray::ConstPtr &msg)
   {
-    const visualization_msgs::Marker *target = NULL;
-    for (visualization_msgs::MarkerArray::_markers_type::const_iterator
-             it = msg->markers.cbegin(),
-             it_end = msg->markers.cend();
-         it != it_end; ++it)
-    {
-      const visualization_msgs::Marker &marker = *it;
-      if (marker.ns == "target_cluster")
-      {
-        target = &marker;
-      }
-    }
-    ROS_INFO("clusters: %zu", msg->markers.size());
-
-    geometry_msgs::Twist cmd_vel;
-    cmd_vel.linear.x = 0;
-    cmd_vel.angular.z = 0;
-    if (target != NULL)
-    {
-      float dx = target->pose.position.x;
-      float dy = target->pose.position.y;
-      float d = ::hypot(dx, dy);
-      if (d > 0.4)
-      {
-        float ang_max = angles::from_degrees(20.0);
-        float lin_max = 0.2f;
-        cmd_vel.angular.z = atan2(dy, dx);
-        cmd_vel.linear.x = lin_max * (ang_max - fabs(cmd_vel.angular.z)) / ang_max;
-        cmd_vel.linear.x = std::max<float>(0, cmd_vel.linear.x);
-      }
-      ROS_INFO("target: %f, %f velocities: %f(m/sec), %f(deg)", dx, dy, cmd_vel.linear.x, angles::to_degrees(cmd_vel.angular.z));
-    }
-    pub_twist_.publish(cmd_vel);
+    marker_array_ = *msg;
   }
 
 public:
@@ -76,10 +46,68 @@ public:
   {
     ROS_INFO("Hello ROS World!");
 
-    ros::Rate rate(10.0);
+    ros::Rate rate(20.0);
     while (ros::ok())
     {
       ros::spinOnce();
+
+      const visualization_msgs::Marker *target = NULL;
+      for (visualization_msgs::MarkerArray::_markers_type::const_iterator
+               it = marker_array_.markers.cbegin(),
+               it_end = marker_array_.markers.cend();
+           it != it_end; ++it)
+      {
+        const visualization_msgs::Marker &marker = *it;
+        if (marker.ns == "target_cluster")
+        {
+          target = &marker;
+        }
+      }
+
+      geometry_msgs::Twist cmd_vel;
+      cmd_vel.linear.x = 0;
+      cmd_vel.angular.z = 0;
+      if (target != NULL)
+      {
+        float dx = target->pose.position.x;
+        float dy = target->pose.position.y;
+        float dist = hypotf(dx, dy);
+        float dir = atan2(dy, dx);
+
+        ROS_INFO("Following the object in front (dist %0.3f, dir %0.3f)",
+                 dist, dir);
+
+        // 角加速度0.6rad/ssで、向きを最短時間制御
+        cmd_vel.angular.z = sqrtf(2.0 * 0.6 * fabs(dir));
+        if (dir < 0)
+        {
+          cmd_vel.angular.z *= -1;
+        }
+        if (cmd_vel.angular.z > 0.4)
+        {
+          cmd_vel.angular.z = 0.4;
+        }
+        else if (cmd_vel.angular.z < -0.4)
+        {
+          cmd_vel.angular.z = -0.4;
+        }
+
+        // 加速度0.3m/ssで、距離を最短時間制御
+        cmd_vel.linear.x = sqrtf(2.0 * 0.3 * fabs(dist - 0.5));
+        if (dist - 0.5 < 0)
+        {
+          cmd_vel.linear.x *= -1;
+        }
+        if (cmd_vel.linear.x > 0.2)
+        {
+          cmd_vel.linear.x = 0.2;
+        }
+        else if (cmd_vel.linear.x < -0.2)
+        {
+          cmd_vel.linear.x = -0.2;
+        }
+      }
+      pub_twist_.publish(cmd_vel);
       rate.sleep();
     }
   }
