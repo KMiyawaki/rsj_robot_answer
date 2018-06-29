@@ -4,9 +4,9 @@
   <version>0.1.0</version>
   <description>Robot control test</description>
 
-  <maintainer email="atsushi.w@ieee.org">I</maintainer>
+  <maintainer email="kenzaburo.miyawaki@oit.ac.jp">Kenzaburo Miyawaki</maintainer>
   <license>BSD</license>
-  <author email="atsushi.w@ieee.org">I</author>
+  <author email="kenzaburo.miyawaki@oit.ac.jp">Kenzaburo Miyawaki</author>
 
   <buildtool_depend>catkin</buildtool_depend>
 
